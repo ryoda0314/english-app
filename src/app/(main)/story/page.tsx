@@ -27,6 +27,10 @@ import {
     Home,
     Plane,
     Languages,
+    Settings,
+    Type,
+    AlignLeft,
+    X,
 } from 'lucide-react';
 
 // Mock data deleted
@@ -75,6 +79,29 @@ type Step = 'input' | 'themes' | 'story';
 
 type DisplayMode = 'mixed' | 'english';
 
+// Display Settings Types
+type FontSize = 'sm' | 'md' | 'lg' | 'xl';
+type FontFamily = 'serif' | 'sans';
+type LineHeight = 'normal' | 'relaxed' | 'loose';
+
+const FONT_SIZE_CLASSES: Record<FontSize, string> = {
+    sm: 'text-base',
+    md: 'text-lg',
+    lg: 'text-xl',
+    xl: 'text-2xl',
+};
+
+const FONT_FAMILY_CLASSES: Record<FontFamily, string> = {
+    serif: 'font-[var(--font-display)]',
+    sans: 'font-[var(--font-body)]',
+};
+
+const LINE_HEIGHT_CLASSES: Record<LineHeight, string> = {
+    normal: 'leading-6',
+    relaxed: 'leading-7',
+    loose: 'leading-9',
+};
+
 export default function StoryPage() {
     const [step, setStep] = useState<Step>('input');
     const [expression, setExpression] = useState('');
@@ -87,6 +114,13 @@ export default function StoryPage() {
     const [error, setError] = useState('');
     const [displayMode, setDisplayMode] = useState<DisplayMode>('mixed');
     const [savedPhrases, setSavedPhrases] = useState<Set<string>>(new Set());
+
+    // Display Settings State
+    const [showSettings, setShowSettings] = useState(false);
+    const [fontSize, setFontSize] = useState<FontSize>('md');
+    const [fontFamily, setFontFamily] = useState<FontFamily>('serif');
+    const [lineHeight, setLineHeight] = useState<LineHeight>('relaxed');
+
     const supabase = createBrowserClient();
 
     const handleGenerateThemes = async () => {
@@ -196,23 +230,69 @@ export default function StoryPage() {
 
         if (!text) return null;
 
-        const parts = text.split(/(\*\*.*?\*\*)/g);
+        // Split by newlines to handle paragraphs
+        const paragraphs = text.split(/\n\s*\n/);
 
         return (
-            <div className="font-[var(--font-display)] text-lg leading-relaxed text-charcoal-800 whitespace-pre-line">
-                {parts.map((part, index) => {
-                    if (part.startsWith('**') && part.endsWith('**')) {
+            <div className={`
+                ${FONT_SIZE_CLASSES[fontSize]}
+                ${FONT_FAMILY_CLASSES[fontFamily]}
+                ${LINE_HEIGHT_CLASSES[lineHeight]}
+                text-charcoal-800 transition-all duration-300
+            `}>
+                {paragraphs.map((paragraph, pIndex) => {
+                    // Check if paragraph is primarily dialogue or English (starts with " or ' or contains English chars)
+                    const isDialogue = /^[「"']/.test(paragraph.trim()) || /^[A-Za-z]/.test(paragraph.trim());
+
+                    // If it's a dialogue/English line, make EACH SENTENCE interactive
+                    if (isDialogue) {
+                        // Split by sentence ending punctuation (.!?) followed by space or end of string
+                        // Keep the punctuation with the sentence
+                        const sentences = paragraph.match(/[^\.!\?]+[\.!\?]+["']?|.+$/g) || [paragraph];
+
                         return (
-                            <InteractivePhrase
-                                key={index}
-                                phrase={part}
-                                isSaved={savedPhrases.has(part)}
-                                onSave={() => handleSavePhrase(part)}
-                                className="mx-1"
-                            />
+                            <div
+                                key={pIndex}
+                                className="mb-6 pl-2 border-l-2 border-primary-100"
+                            >
+                                {sentences.map((sentence, sIndex) => (
+                                    <React.Fragment key={sIndex}>
+                                        <InteractivePhrase
+                                            phrase={sentence.trim()}
+                                            isSaved={savedPhrases.has(sentence.trim())}
+                                            onSave={() => handleSavePhrase(sentence.trim())}
+                                            className="mr-1" // Add spacing between sentences
+                                        />
+                                        {/* Add space after sentence if not the last one (visual spacing is handled by margin right above too, but explicit space handles copy paste/flow better) */}
+                                        {/* {sIndex < sentences.length - 1 && ' '} */}
+                                    </React.Fragment>
+                                ))}
+                            </div>
                         );
                     }
-                    return <span key={index}>{part}</span>;
+
+                    // For Japanese text (narrative), keep it as text (no splitting needed if no ** expected there)
+                    // But if there ARE ** phrases in narrative (unlikely per prompt), we can handle them.
+                    const parts = paragraph.split(/(\*\*.*?\*\*)/g);
+
+                    return (
+                        <div key={pIndex} className="mb-6">
+                            {parts.map((part, index) => {
+                                if (part.startsWith('**') && part.endsWith('**')) {
+                                    return (
+                                        <InteractivePhrase
+                                            key={index}
+                                            phrase={part}
+                                            isSaved={savedPhrases.has(part)}
+                                            onSave={() => handleSavePhrase(part)}
+                                            className="mx-1"
+                                        />
+                                    );
+                                }
+                                return <span key={index}>{part}</span>;
+                            })}
+                        </div>
+                    );
                 })}
             </div>
         );
@@ -420,10 +500,10 @@ export default function StoryPage() {
                             </button>
                         </div>
 
-                        {/* Display Mode Toggle */}
-                        <div className="flex items-center justify-center gap-2 py-2">
-                            <Languages className="w-5 h-5 text-charcoal-500" />
-                            <div className="flex items-center bg-cream-200 rounded-full p-1">
+                        {/* Display Controls */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-2">
+                            {/* Mode Toggle */}
+                            <div className="bg-cream-200 rounded-full p-1 flex">
                                 <button
                                     onClick={() => setDisplayMode('mixed')}
                                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${displayMode === 'mixed'
@@ -443,7 +523,122 @@ export default function StoryPage() {
                                     English Only
                                 </button>
                             </div>
+
+                            {/* Settings Toggle */}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowSettings(!showSettings)}
+                                className={`text-charcoal-600 ${showSettings ? 'bg-cream-200' : ''}`}
+                                leftIcon={<Settings className="w-4 h-4" />}
+                            >
+                                表示設定
+                            </Button>
                         </div>
+
+                        {/* Settings Panel */}
+                        <AnimatePresence>
+                            {showSettings && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="bg-white/80 border border-cream-200 rounded-xl p-4 mb-4 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-sm">
+                                        {/* Font Size */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-sm text-charcoal-500 mb-1">
+                                                <Type className="w-4 h-4" />
+                                                <span>文字サイズ</span>
+                                            </div>
+                                            <div className="flex gap-1 bg-cream-50 rounded-lg p-1">
+                                                {(['sm', 'md', 'lg', 'xl'] as FontSize[]).map((size) => (
+                                                    <button
+                                                        key={size}
+                                                        onClick={() => setFontSize(size)}
+                                                        className={`flex-1 py-1 rounded-md text-sm transition-all ${fontSize === size
+                                                            ? 'bg-white shadow-sm text-primary-700 font-medium'
+                                                            : 'text-charcoal-400 hover:text-charcoal-600'
+                                                            }`}
+                                                    >
+                                                        {size === 'sm' && '小'}
+                                                        {size === 'md' && '中'}
+                                                        {size === 'lg' && '大'}
+                                                        {size === 'xl' && '特大'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Font Family */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-sm text-charcoal-500 mb-1">
+                                                <Type className="w-4 h-4" />
+                                                <span>フォント</span>
+                                            </div>
+                                            <div className="flex gap-1 bg-cream-50 rounded-lg p-1">
+                                                <button
+                                                    onClick={() => setFontFamily('serif')}
+                                                    className={`flex-1 py-1 rounded-md text-sm transition-all ${fontFamily === 'serif'
+                                                        ? 'bg-white shadow-sm text-primary-700 font-medium font-[var(--font-display)]'
+                                                        : 'text-charcoal-400 hover:text-charcoal-600 font-[var(--font-display)]'
+                                                        }`}
+                                                >
+                                                    明朝体
+                                                </button>
+                                                <button
+                                                    onClick={() => setFontFamily('sans')}
+                                                    className={`flex-1 py-1 rounded-md text-sm transition-all ${fontFamily === 'sans'
+                                                        ? 'bg-white shadow-sm text-primary-700 font-medium font-[var(--font-body)]'
+                                                        : 'text-charcoal-400 hover:text-charcoal-600 font-[var(--font-body)]'
+                                                        }`}
+                                                >
+                                                    ゴシック
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Line Height */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-sm text-charcoal-500 mb-1">
+                                                <AlignLeft className="w-4 h-4" />
+                                                <span>行間</span>
+                                            </div>
+                                            <div className="flex gap-1 bg-cream-50 rounded-lg p-1">
+                                                <button
+                                                    onClick={() => setLineHeight('normal')}
+                                                    className={`flex-1 py-1 rounded-md text-sm transition-all ${lineHeight === 'normal'
+                                                        ? 'bg-white shadow-sm text-primary-700 font-medium'
+                                                        : 'text-charcoal-400 hover:text-charcoal-600'
+                                                        }`}
+                                                >
+                                                    狭め
+                                                </button>
+                                                <button
+                                                    onClick={() => setLineHeight('relaxed')}
+                                                    className={`flex-1 py-1 rounded-md text-sm transition-all ${lineHeight === 'relaxed'
+                                                        ? 'bg-white shadow-sm text-primary-700 font-medium'
+                                                        : 'text-charcoal-400 hover:text-charcoal-600'
+                                                        }`}
+                                                >
+                                                    標準
+                                                </button>
+                                                <button
+                                                    onClick={() => setLineHeight('loose')}
+                                                    className={`flex-1 py-1 rounded-md text-sm transition-all ${lineHeight === 'loose'
+                                                        ? 'bg-white shadow-sm text-primary-700 font-medium'
+                                                        : 'text-charcoal-400 hover:text-charcoal-600'
+                                                        }`}
+                                                >
+                                                    広め
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Story Card */}
                         <Card variant="elevated" padding="lg" className="relative overflow-hidden">

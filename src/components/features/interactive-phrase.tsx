@@ -72,9 +72,18 @@ export function InteractivePhrase({
             onMouseEnter={() => setIsOpen(true)}
             onMouseLeave={() => setIsOpen(false)}
         >
-            {/* The parsing logic might leave ** in the text passed here, strip them if needed */}
-            <span className="border-b-2 border-primary-200/50 pb-0.5 whitespace-nowrap">
-                {phrase.replace(/\*\*/g, '')}
+            {/* Parse and render bold segments */}
+            <span className="border-b-2 border-primary-200/50 pb-0.5 leading-relaxed">
+                {phrase.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                        return (
+                            <span key={i} className="font-bold text-primary-700 mx-0.5">
+                                {part.slice(2, -2)}
+                            </span>
+                        );
+                    }
+                    return <span key={i}>{part}</span>;
+                })}
             </span>
 
             <AnimatePresence>
