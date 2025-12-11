@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Button,
@@ -201,8 +201,8 @@ export default function StoryPage() {
                 return;
             }
 
-            // Remove ** if present
-            const cleanPhrase = phrase.replace(/\*\*/g, '');
+            // Remove ** and quotes if present
+            const cleanPhrase = phrase.replace(/\*\*/g, '').replace(/^["']|["']$/g, '').trim();
 
             const { error: insertError } = await supabase
                 .from('saved_phrases')
@@ -241,55 +241,76 @@ export default function StoryPage() {
                 text-charcoal-800 transition-all duration-300
             `}>
                 {paragraphs.map((paragraph, pIndex) => {
-                    // Check if paragraph is primarily dialogue or English (starts with " or ' or contains English chars)
-                    const isDialogue = /^[「"']/.test(paragraph.trim()) || /^[A-Za-z]/.test(paragraph.trim());
+                    // Parse the paragraph into parts: English quoted dialogue vs Japanese text
+                    // Match: "..." or '...' (English dialogue in quotes)
+                    const parts = paragraph.split(/("[^"]+"|'[^']+')/g);
 
-                    // If it's a dialogue/English line, make EACH SENTENCE interactive
-                    if (isDialogue) {
-                        // Split by sentence ending punctuation (.!?) followed by space or end of string
-                        // Keep the punctuation with the sentence
-                        const sentences = paragraph.match(/[^\.!\?]+[\.!\?]+["']?|.+$/g) || [paragraph];
-
-                        return (
-                            <div
-                                key={pIndex}
-                                className="mb-6 pl-2 border-l-2 border-primary-100"
-                            >
-                                {sentences.map((sentence, sIndex) => (
-                                    <React.Fragment key={sIndex}>
-                                        <InteractivePhrase
-                                            phrase={sentence.trim()}
-                                            isSaved={savedPhrases.has(sentence.trim())}
-                                            onSave={() => handleSavePhrase(sentence.trim())}
-                                            className="mr-1" // Add spacing between sentences
-                                        />
-                                        {/* Add space after sentence if not the last one (visual spacing is handled by margin right above too, but explicit space handles copy paste/flow better) */}
-                                        {/* {sIndex < sentences.length - 1 && ' '} */}
-                                    </React.Fragment>
-                                ))}
-                            </div>
-                        );
-                    }
-
-                    // For Japanese text (narrative), keep it as text (no splitting needed if no ** expected there)
-                    // But if there ARE ** phrases in narrative (unlikely per prompt), we can handle them.
-                    const parts = paragraph.split(/(\*\*.*?\*\*)/g);
+                    // Check if this paragraph contains any English dialogue
+                    const hasEnglishDialogue = parts.some(part =>
+                        (part.startsWith('"') && part.endsWith('"')) ||
+                        (part.startsWith("'") && part.endsWith("'"))
+                    );
 
                     return (
-                        <div key={pIndex} className="mb-6">
+                        <div
+                            key={pIndex}
+                            className={`mb-6 ${hasEnglishDialogue ? 'pl-2 border-l-2 border-primary-100' : ''}`}
+                        >
                             {parts.map((part, index) => {
-                                if (part.startsWith('**') && part.endsWith('**')) {
+                                // Check if this part is English dialogue (in quotes)
+                                const isEnglishQuote =
+                                    (part.startsWith('"') && part.endsWith('"')) ||
+                                    (part.startsWith("'") && part.endsWith("'"));
+
+                                if (isEnglishQuote) {
+                                    // English dialogue - split into sentences and make each interactive
+                                    // Match sentences ending with .!? or ... AND also capture remaining text
+                                    const sentences = part.match(/[^.!?]+(?:[.!?]+|\.\.\.)+["']?|[^.!?]+["']?$/g) || [part];
+
                                     return (
-                                        <InteractivePhrase
-                                            key={index}
-                                            phrase={part}
-                                            isSaved={savedPhrases.has(part)}
-                                            onSave={() => handleSavePhrase(part)}
-                                            className="mx-1"
-                                        />
+                                        <React.Fragment key={index}>
+                                            {sentences.map((sentence, sIndex) => (
+                                                <InteractivePhrase
+                                                    key={sIndex}
+                                                    phrase={sentence.trim()}
+                                                    isSaved={savedPhrases.has(sentence.trim())}
+                                                    onSave={() => handleSavePhrase(sentence.trim())}
+                                                    className="select-text mr-1"
+                                                />
+                                            ))}
+                                        </React.Fragment>
                                     );
                                 }
-                                return <span key={index}>{part}</span>;
+
+                                // Check for ** highlighted phrases (English phrases in Japanese narrative)
+                                if (part.includes('**')) {
+                                    const subParts = part.split(/(\*\*.*?\*\*)/g);
+                                    return (
+                                        <span key={index} className="select-none text-charcoal-600">
+                                            {subParts.map((subPart, subIndex) => {
+                                                if (subPart.startsWith('**') && subPart.endsWith('**')) {
+                                                    return (
+                                                        <InteractivePhrase
+                                                            key={subIndex}
+                                                            phrase={subPart}
+                                                            isSaved={savedPhrases.has(subPart)}
+                                                            onSave={() => handleSavePhrase(subPart)}
+                                                            className="mx-1 select-text"
+                                                        />
+                                                    );
+                                                }
+                                                return <span key={subIndex}>{subPart}</span>;
+                                            })}
+                                        </span>
+                                    );
+                                }
+
+                                // Japanese text - non-selectable
+                                return (
+                                    <span key={index} className="select-none text-charcoal-600">
+                                        {part}
+                                    </span>
+                                );
                             })}
                         </div>
                     );

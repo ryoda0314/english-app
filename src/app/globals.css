@@ -1,13 +1,5 @@
-@import "tailwindcss";
-
-/* ===================================
-   EMOTION ENGLISH - Design System
-   Aesthetic: Soft Literary / Journal
-   Feel: Warm, intimate, like a beloved novel
-   =================================== */
-
-/* === Google Fonts Import === */
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
 
 /* === CSS Variables - Light Theme === */
 :root {
@@ -125,7 +117,7 @@
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-muted: var(--muted);
-  
+
   --color-primary-50: var(--primary-50);
   --color-primary-100: var(--primary-100);
   --color-primary-200: var(--primary-200);
@@ -196,7 +188,12 @@ body::before {
 }
 
 /* === Typography === */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
   font-weight: 500;
   line-height: 1.2;
@@ -292,6 +289,7 @@ a:hover {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -299,8 +297,13 @@ a:hover {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInLeft {
@@ -308,6 +311,7 @@ a:hover {
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -315,18 +319,37 @@ a:hover {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 /* Animation utilities */
@@ -347,11 +370,25 @@ a:hover {
 }
 
 /* Staggered animation delays */
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
-.stagger-5 { animation-delay: 0.5s; }
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+
+.stagger-5 {
+  animation-delay: 0.5s;
+}
 
 /* === Utility Classes === */
 
@@ -450,12 +487,35 @@ a:hover {
   transition: all 0.2s ease;
 }
 
-.emotion-tag-anxiety { background: var(--secondary-100); color: var(--secondary-700); }
-.emotion-tag-joy { background: var(--accent-100); color: var(--accent-700); }
-.emotion-tag-sadness { background: #dbeafe; color: #1e40af; }
-.emotion-tag-anger { background: #fee2e2; color: #b91c1c; }
-.emotion-tag-surprise { background: #fae8ff; color: #a21caf; }
-.emotion-tag-mixed { background: var(--cream-200); color: var(--charcoal-700); }
+.emotion-tag-anxiety {
+  background: var(--secondary-100);
+  color: var(--secondary-700);
+}
+
+.emotion-tag-joy {
+  background: var(--accent-100);
+  color: var(--accent-700);
+}
+
+.emotion-tag-sadness {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.emotion-tag-anger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.emotion-tag-surprise {
+  background: #fae8ff;
+  color: #a21caf;
+}
+
+.emotion-tag-mixed {
+  background: var(--cream-200);
+  color: var(--charcoal-700);
+}
 
 /* Tone badges */
 .tone-badge {
@@ -469,10 +529,25 @@ a:hover {
   letter-spacing: 0.05em;
 }
 
-.tone-casual { background: var(--primary-100); color: var(--primary-700); }
-.tone-polite { background: #e0e7ff; color: #4338ca; }
-.tone-playful { background: #fce7f3; color: #be185d; }
-.tone-serious { background: var(--charcoal-200); color: var(--charcoal-800); }
+.tone-casual {
+  background: var(--primary-100);
+  color: var(--primary-700);
+}
+
+.tone-polite {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.tone-playful {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.tone-serious {
+  background: var(--charcoal-200);
+  color: var(--charcoal-800);
+}
 
 /* Input styles */
 .input {
@@ -500,12 +575,10 @@ a:hover {
 .textarea-diary {
   min-height: 200px;
   line-height: 2;
-  background-image: repeating-linear-gradient(
-    transparent,
-    transparent 31px,
-    var(--cream-200) 31px,
-    var(--cream-200) 32px
-  );
+  background-image: repeating-linear-gradient(transparent,
+      transparent 31px,
+      var(--cream-200) 31px,
+      var(--cream-200) 32px);
   background-attachment: local;
   padding-top: 8px;
 }
@@ -548,12 +621,10 @@ a:hover {
 
 /* Loading skeleton */
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--cream-200) 0%,
-    var(--cream-100) 50%,
-    var(--cream-200) 100%
-  );
+  background: linear-gradient(90deg,
+      var(--cream-200) 0%,
+      var(--cream-100) 50%,
+      var(--cream-200) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-sm);
@@ -619,13 +690,11 @@ a:hover {
   right: 0;
   width: 50px;
   height: 50px;
-  background: linear-gradient(
-    -45deg,
-    transparent 40%,
-    var(--cream-200) 40%,
-    var(--cream-300) 43%,
-    var(--cream-100) 47%,
-    var(--cream-50) 100%
-  );
+  background: linear-gradient(-45deg,
+      transparent 40%,
+      var(--cream-200) 40%,
+      var(--cream-300) 43%,
+      var(--cream-100) 47%,
+      var(--cream-50) 100%);
   box-shadow: -2px -2px 5px rgba(0, 0, 0, 0.05);
 }
