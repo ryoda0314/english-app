@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Button,
@@ -59,7 +59,7 @@ interface Story {
     };
 }
 
-const GENRE_ICONS: Record<string, React.ReactNode> = {
+const GENRE_ICONS: Record<string, ReactNode> = {
     friendship: <Users className="w-4 h-4" />,
     romance: <Heart className="w-4 h-4" />,
     work: <Briefcase className="w-4 h-4" />,
@@ -268,7 +268,7 @@ export default function StoryPage() {
                                     const sentences = part.match(/[^.!?]+(?:[.!?]+|\.\.\.)+["']?|[^.!?]+["']?$/g) || [part];
 
                                     return (
-                                        <React.Fragment key={index}>
+                                        <Fragment key={index}>
                                             {sentences.map((sentence, sIndex) => (
                                                 <InteractivePhrase
                                                     key={sIndex}
@@ -278,7 +278,7 @@ export default function StoryPage() {
                                                     className="select-text mr-1"
                                                 />
                                             ))}
-                                        </React.Fragment>
+                                        </Fragment>
                                     );
                                 }
 
